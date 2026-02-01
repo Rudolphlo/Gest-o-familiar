@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="pt-pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    
+    <!-- Configurações de App Nativo -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="FamilyHub">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#2563eb">
+    
+    <title>FamilyHub - Gestão Familiar</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <style>
+        body { 
+            -webkit-tap-highlight-color: transparent; 
+            user-select: none;
+            padding-top: env(safe-area-inset-top);
+        }
+        .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
+        .animate-fade { animation: fadeIn 0.4s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body class="bg-slate-50">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+        const { Home, CheckSquare, GraduationCap, Users, Plus, Share2, Trash2, LogOut, Check, ChevronRight, Bell } = lucide;
+
+        function App() {
+            const [view, setView] = useState('loading');
+            const [userName, setUserName] = useState(localStorage.getItem('user_name') || '');
+            const [familyId, setFamilyId] = useState(localStorage.getItem('family_id'));
+            
+            // Dados de demonstração (em produção estes viriam do Firebase)
+            const [items, setItems] = useState([
+                { id: 1, title: 'Comprar jantar', type: 'task', category: 'Compras', createdBy: 'Pai', completed: false },
+                { id: 2, title: 'Reunião Escolar', type: 'education', category: 'Evento', createdBy: 'Mãe', date: '2023-11-05' }
+            ]);
+
+            useEffect(() => {
+                const init = () => {
+                    const params = new URLSearchParams(window.location.search);
+                    const invite = params.get('join');
+                    
+                    if (invite && !familyId) setView('join');
+                    else if (familyId) setView('dashboard');
+                    else setView('login');
+                    
+                    setTimeout(() => lucide.createIcons(), 100);
+                };
+                init();
+            }, [familyId]);
+
+            useEffect(() => { lucide.createIcons(); }, [view]);
+
+            const handleLogin = (name) => {
+                if (!name) return;
+                localStorage.setItem('user_name', name);
+                localStorage.setItem('family_id', 'familia_demo_123');
+                setUserName(name);
+                setFamilyId('familia_demo_123');
+                setView('dashboard');
+            };
+
+            const shareInvite = () => {
+                const url = window.location.origin + window.location.pathname + "?join=FAM789";
+                const text = `Entra na nossa casa no FamilyHub! Clica aqui: ${url}`;
+                
+                if (navigator.share) {
+                    navigator.share({ title: 'Convite FamilyHub', text, url });
+                } else {
+                    navigator.clipboard.writeText(text);
+                    alert("Link de convite copiado para o teclado!");
+                }
+            };
+
+            if (view === 'loading') return (
+                <div className="h-screen flex items-center justify-center bg-blue-600 text-white">
+                    <div className="text-center">
+                        <div className="w-12 h-12 border-4 border-white/20 border-t-white rounded-full animate-spin mx-auto mb-4"></div>
+                        <p className="font-black tracking-widest text-sm">A CARREGAR...</p>
+                    </div>
+                </div>
+            );
+
+            if (view === 'login' || view === 'join') return (
+                <div className="h-screen bg-blue-600 p-6 flex items-center justify-center">
+                    <div className="bg-white w-full max-w-sm rounded-[40px] p-10 shadow-2xl text-center space-y-6">
+                        <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mx-auto">
+                            <i data-lucide="home" className="w-8 h-8"></i>
+                        </div>
+                        <h2 className="text-2xl font-black text-slate-800 tracking-tight">
+                            {view === 'login' ? 'Bem-vindo!' : 'Recebeu um Convite!'}
+                        </h2>
+                        <input 
+                            type="text" 
+                            placeholder="Seu Nome (ex: Pai)" 
+                            className="w-full bg-slate-100 border-none rounded-2xl p-4 outline-none focus:ring-2 focus:ring-blue-500 font-bold text-center"
+                            onChange={(e) => setUserName(e.target.value)}
+                        />
+                        <button 
+                            onClick={() => handleLogin(userName)}
+                            className="w-full bg-blue-600 text-white py-4 rounded-2xl font-black shadow-xl active:scale-95 transition-all"
+                        >
+                            COMEÇAR AGORA
+                        </button>
+                    </div>
+                </div>
+            );
+
+            return (
+                <div className="min-h-screen bg-slate-50 pb-24">
+                    <header className="bg-white/80 backdrop-blur-md p-4 sticky top-0 border-b flex justify-between items-center z-10">
+                        <div className="flex items-center gap-2">
+                            <div className="bg-blue-600 p-1.5 rounded-lg text-white"><i data-lucide="home" className="w-4 h-4"></i></div>
+                            <h1 className="font-black text-slate-800 tracking-tighter text-lg">FamilyHub</h1>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-black text-xs">{userName[0]}</div>
+                        </div>
+                    </header>
+
+                    <main className="p-4 max-w-md mx-auto space-y-6 animate-fade">
+                        {view === 'dashboard' && (
+                            <div className="space-y-6">
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="bg-blue-600 p-5 rounded-[32px] text-white shadow-lg shadow-blue-200">
+                                        <p className="text-[10px] font-bold opacity-60 uppercase">Tarefas</p>
+                                        <p className="text-3xl font-black">2</p>
+                                    </div>
+                                    <div className="bg-white p-5 rounded-[32px] border border-slate-200">
+                                        <p className="text-[10px] text-slate-400 font-bold uppercase">Família</p>
+                                        <p className="text-3xl font-black text-slate-800">Online</p>
+                                    </div>
+                                </div>
+                                
+                                <h3 className="font-black text-slate-800 text-lg">Atividades da Casa</h3>
+                                <div className="space-y-3">
+                                    {items.map(item => (
+                                        <div key={item.id} className="bg-white p-5 rounded-3xl border border-slate-100 flex items-center gap-4 shadow-sm">
+                                            <div className={`w-1.5 h-8 rounded-full ${item.type === 'task' ? 'bg-blue-500' : 'bg-purple-500'}`}></div>
+                                            <div className="flex-1">
+                                                <p className="font-bold text-slate-700 text-sm">{item.title}</p>
+                                                <p className="text-[10px] text-slate-400 font-bold uppercase">{item.createdBy} • {item.category}</p>
+                                            </div>
+                                            <i data-lucide="chevron-right" className="w-4 h-4 text-slate-300"></i>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {view === 'settings' && (
+                            <div className="space-y-6">
+                                <h2 className="text-2xl font-black text-slate-800">Definições</h2>
+                                <div className="bg-blue-600 p-8 rounded-[40px] text-white space-y-4 shadow-xl shadow-blue-100 text-center">
+                                    <i data-lucide="share-2" className="w-10 h-10 mx-auto opacity-50"></i>
+                                    <h3 className="font-black text-xl">Convidar Cônjuge</h3>
+                                    <p className="text-sm opacity-80 leading-relaxed">Envie o link para que outra pessoa possa gerir a casa consigo em tempo real.</p>
+                                    <button onClick={shareInvite} className="w-full bg-white text-blue-600 py-4 rounded-2xl font-black flex items-center justify-center gap-2 active:scale-95 transition-all">
+                                        PARTILHAR CONVITE
+                                    </button>
+                                </div>
+                                <button onClick={() => { localStorage.clear(); window.location.reload(); }} className="w-full p-4 text-red-500 font-bold rounded-2xl flex items-center justify-center gap-2">
+                                    <i data-lucide="log-out" className="w-4 h-4"></i> SAIR DA CONTA
+                                </button>
+                            </div>
+                        )}
+                    </main>
+
+                    <nav className="fixed bottom-0 w-full bg-white/90 backdrop-blur-md border-t flex justify-around py-4 z-20 safe-bottom">
+                        <button onClick={() => setView('dashboard')} className={`flex flex-col items-center gap-1 ${view === 'dashboard' ? 'text-blue-600 scale-110' : 'text-slate-400'}`}>
+                            <i data-lucide="home"></i>
+                            <span className="text-[9px] font-black uppercase">Home</span>
+                        </button>
+                        <button onClick={() => setView('tasks')} className={`flex flex-col items-center gap-1 ${view === 'tasks' ? 'text-blue-600' : 'text-slate-400'}`}>
+                            <i data-lucide="check-square"></i>
+                            <span className="text-[9px] font-black uppercase">Rotina</span>
+                        </button>
+                        <button onClick={() => setView('education')} className={`flex flex-col items-center gap-1 ${view === 'education' ? 'text-blue-600' : 'text-slate-400'}`}>
+                            <i data-lucide="graduation-cap"></i>
+                            <span className="text-[9px] font-black uppercase">Escola</span>
+                        </button>
+                        <button onClick={() => setView('settings')} className={`flex flex-col items-center gap-1 ${view === 'settings' ? 'text-blue-600' : 'text-slate-400'}`}>
+                            <i data-lucide="users"></i>
+                            <span className="text-[9px] font-black uppercase">Família</span>
+                        </button>
+                    </nav>
+
+                    <button className="fixed bottom-28 right-6 bg-blue-600 text-white p-4 rounded-full shadow-2xl active:scale-90 transition-transform z-30">
+                        <i data-lucide="plus"></i>
+                    </button>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
+
